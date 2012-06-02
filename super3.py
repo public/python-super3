@@ -35,3 +35,4 @@ class super3(super):
             return caller_class, caller_self
         else:
             return args
+
