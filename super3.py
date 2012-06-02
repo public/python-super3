@@ -17,6 +17,7 @@ class super3(super):
     def __args__(cls, *args, **kwargs):
         if not args:
             # Find the caller and work out the class it was defined in (not what it was bound to!)
+            # need to f_back's to get out of super3()
             caller = kwargs.get('caller') or sys._getframe().f_back.f_back
             caller_code = caller.f_code
 
@@ -26,7 +27,9 @@ class super3(super):
                 
                 # type(caller_self) may not be the class that the caller is actually defined
                 # in so instead we search through the MRO to find the class which owns this code object
-                
+                # we do the __dict__ lookup ourselves instead of with getattr to avoid grabbing
+                # an attr from the parent class
+
                 mro_funcs = ((cls, cls.__dict__.get(caller_name)) for cls in type(caller_self).__mro__)
                 caller_class = next((cls for cls, func in mro_funcs
                                             if func and func.func_code == caller_code))
@@ -35,4 +38,3 @@ class super3(super):
             return caller_class, caller_self
         else:
             return args
-
