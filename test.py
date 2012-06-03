@@ -1,7 +1,7 @@
 from super3 import super3
 import inspect
 import time
-
+import sys
 def super_proxy(self, type):
     py_super = super(type, self)
     my_super = super3(caller=inspect.currentframe().f_back)
@@ -13,6 +13,13 @@ def super_proxy(self, type):
 
     return my_super
 
+def with_super_result(func):
+    def decorated(self, *args, **kwargs):
+        s = super3()
+        r = getattr(s, func.__name__)()
+        return func(self, r)
+    return decorated
+
 class A(object):
     def f(self):
         return A
@@ -20,6 +27,11 @@ class A(object):
 class A2(object):
     def f(self):
         return A2
+
+class A3(A):
+    @with_super_result
+    def f(self, super):
+        return A3
 
 class B(A):
     pass
@@ -41,14 +53,31 @@ class F(E):
 
 class G(F, E, A):
     def f(self):
-        super_proxy(self, G).f()
+        r = super_proxy(self, G).f()
+        assert r == A
         return F.f(self)
 
-for cls in (A, A2, B, C, D, E, F, G):
+class H(G):
+    @with_super_result
+    def f(self, super):
+        return H
+
+class I(H):
+    @with_super_result
+    def f(self, super):
+        assert super == H
+        return I
+
+import random
+
+classes = [A3, I, H, A, A2, B, C, D, E, F, G]
+random.shuffle(classes)
+print classes
+
+for cls in classes:
     print cls, cls().f()
 
 def speed():
-
     class A(object):
         def f(self):
             return A, self
@@ -65,9 +94,14 @@ def speed():
         def f(self):
             return super(pyB, self).f()
 
+    class myDecoratedB(A):
+        @with_super_result
+        def f(self, result):
+            return self
+
     def super_time(cls):
         b = cls()
-        N = 50000
+        N = 10000
         U = 10
         s = time.time()
         for i in range(1, N):
@@ -90,8 +124,10 @@ def speed():
     py = super_time(pyB)
     myI = super_time(myImplicitB)
     myE = super_time(myExplicitB)
+    myD = super_time(myDecoratedB)
 
     print "implicit is", myI[0]/py[0], "times slower than normal super()"
     print "explicit is", myE[0]/py[0], "times slower than normal super()"
+    print "decorated is", myD[0]/py[0], "times slower than normal super()"
 
 speed()    
