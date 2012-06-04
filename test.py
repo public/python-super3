@@ -1,4 +1,4 @@
-from super3 import super3
+from super3 import more_super3 as super3
 import inspect
 import time
 import sys

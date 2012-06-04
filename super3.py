@@ -23,7 +23,8 @@ def cell_contents(cells):
         pass
         
 class super3(super):
-    __cache__ = {}
+    _cache = {}
+    _act_more_like_python3 = True
 
     def __init__(self, *args, **kwargs):
         super(super3, self).__init__(*self.__args__(*args, **kwargs))
@@ -55,7 +56,7 @@ class super3(super):
 
             caller_key = (caller_code, caller_free_vars)
             
-            if caller_key not in cls.__cache__:
+            if caller_key not in cls._cache:
                 caller_name_in_class = caller_name = caller_code.co_name
                 
                 # type(caller_self) may not be the class that the caller is actually defined
@@ -73,13 +74,19 @@ class super3(super):
                     # we also dont always know the real name that's being invoked if e.g. we are inside
                     # a decorator. so we have to do a more exhaustive search of the MRO. nicely written
                     # decorators will namke sure func.__name__ still matches afterwards but some do not
-                    mro = type(caller_self).__mro__
-                    caller_class, caller_name_in_class = find_code_in_classes(mro, caller_code, caller_free_vars)
+                    if cls._act_more_like_python3:
+                        raise SystemError("Unable to determine implicit class")
+                    else:
+                        mro = type(caller_self).__mro__
+                        caller_class, caller_name_in_class = find_code_in_classes(mro, caller_code, caller_free_vars)
 
-                cls.__cache__[caller_key] = caller_class
+                cls._cache[caller_key] = caller_class
             else:
-                caller_class = cls.__cache__[caller_key]
+                caller_class = cls._cache[caller_key]
 
             return caller_class, caller_self
         else:
             return args
+
+class more_super3(super3):
+    _act_more_like_python3 = False
