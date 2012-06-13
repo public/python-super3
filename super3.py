@@ -27,38 +27,42 @@ class super3(super):
     _act_more_like_python3 = True
 
     def __init__(self, *args, **kwargs):
-        super(super3, self).__init__(*self.__args__(*args, **kwargs))
+        type, obj, func_name = self.__args__(*args, **kwargs)
+        self.bound_caller_func = getattr(obj, func_name)
+        super(super3, self).__init__(type, obj)
 
     def __new__(cls, *args, **kwargs):
         try:
-            return super(super3, cls).__new__(cls, *args) #*cls.__args__(*args, **kwargs))
+            return super(super3, cls).__new__(cls, *args)
         except TypeError: # work around for PyPy having a different implementation of super()
-            return super(super3, cls).__new__(cls, *cls.__args__(*args, **kwargs))
+            type, obj, func_name = self.__args__(*args, **kwargs)
+            new = super(super3, cls).__new__(cls, type, obj)
+            new.bound_caller_func = getattr(obj, func_name)
+            return new
 
     @classmethod
     def __args__(cls, *args, **kwargs):
+        # Find the caller and work out the class it was defined in (not what it was bound to!)
+        # need to f_back's to get out of super3()
+        caller = kwargs.get('caller') or sys._getframe().f_back.f_back
+        caller_code = caller.f_code
+        
+        try:
+            caller_self = caller.f_locals[caller.f_code.co_varnames[0]]
+        except IndexError: # in case self is hidden in varargs 
+            caller_args = inspect.getargvalues(caller)
+            caller_self = caller_args.locals[caller_args.varargs][0]
+        
+        caller_name_in_class = caller_name = caller_code.co_name
+        
+        # for decorated methods we'll probably need to check the closure
+        # vars too to properly distinguish between the various bound methods
+        # this is why we go around checking func_closure in the loops below!
+        caller_free_vars = tuple(caller.f_locals[v] for v in caller_code.co_freevars)
+        
         if not args:
-            # Find the caller and work out the class it was defined in (not what it was bound to!)
-            # need to f_back's to get out of super3()
-            caller = kwargs.get('caller') or sys._getframe().f_back.f_back
-            caller_code = caller.f_code
-            
-            try:
-                caller_self = caller.f_locals[caller.f_code.co_varnames[0]]
-            except IndexError: # in case self is hidden in varargs 
-                caller_args = inspect.getargvalues(caller)
-                caller_self = caller_args.locals[caller_args.varargs][0]
-            
-            # for decorated methods we'll probably need to check the closure
-            # vars too to properly distinguish between the various bound methods
-            # this is why we go around checking func_closure in the loops below!
-            caller_free_vars = tuple(caller.f_locals[v] for v in caller_code.co_freevars)
-
             caller_key = (caller_code, caller_free_vars)
-            
             if caller_key not in cls._cache:
-                caller_name_in_class = caller_name = caller_code.co_name
-                
                 # type(caller_self) may not be the class that the caller is actually defined
                 # in so instead we search through the MRO to find the class which owns this code object
                 # we do the __dict__ lookup ourselves instead of with getattr to avoid grabbing
@@ -79,14 +83,18 @@ class super3(super):
                     else:
                         mro = type(caller_self).__mro__
                         caller_class, caller_name_in_class = find_code_in_classes(mro, caller_code, caller_free_vars)
-
-                cls._cache[caller_key] = caller_class
+                
+                cls._cache[caller_key] = caller_class, caller_name_in_class
             else:
-                caller_class = cls._cache[caller_key]
-
-            return caller_class, caller_self
+                caller_class, caller_name_in_class = cls._cache[caller_key]
         else:
-            return args
+            caller_class, caller_self = args
+
+        return caller_class, caller_self, caller_name_in_class
 
 class more_super3(super3):
     _act_more_like_python3 = False
+
+class callable_super3(more_super3):
+    def __call__(self, *args, **kwargs):
+        return getattr(self, self.bound_caller_func.func_name)(*args, **kwargs)

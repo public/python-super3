@@ -1,4 +1,5 @@
 from super3 import more_super3 as super3
+from super3 import callable_super3
 import inspect
 import time
 import sys
@@ -68,9 +69,18 @@ class I(H):
         assert super == H
         return I
 
+class J(A):
+    def f(self):
+        r = callable_super3()()
+        return r
+
+class K(G):
+    def f(self):
+        return callable_super3()()
+
 import random
 
-classes = [A3, I, H, A, A2, B, C, D, E, F, G]
+classes = [J, K, A3, I, H, A, A2, B, C, D, E, F, G]
 random.shuffle(classes)
 print classes
 
