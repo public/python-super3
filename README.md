@@ -24,4 +24,4 @@ Python3 Support
 
 Python3 is also supported but it uses entirely the same code as Python2.
 
-Really it should be taking the shortcut of grabbing the __cell__ freevar out of func.__closure__.
+Really it should be taking the shortcut of grabbing the `__cell__` freevar out of `func.__closure__`.
