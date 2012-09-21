@@ -7,10 +7,10 @@ import inspect
 
 def find_code_in_classes(classes, code, freevars):
     for cls in classes:
-        for attr, value in cls.__dict__.iteritems():
+        for attr, value in cls.__dict__.items():
             try:
-                if value.func_code == code \
-                  and tuple(cell_contents(value.func_closure)) == freevars:
+                if value.__code__ == code \
+                  and tuple(cell_contents(value.__closure__)) == freevars:
                     return cls, attr
             except AttributeError:
                 continue
@@ -67,12 +67,12 @@ class super3(super):
                 # in so instead we search through the MRO to find the class which owns this code object
                 # we do the __dict__ lookup ourselves instead of with getattr to avoid grabbing
                 # an attr from the parent class
-
+                
                 try:
                     mro_funcs = ((cls, cls.__dict__.get(caller_name)) for cls in type(caller_self).__mro__)
                     caller_class = next((cls for cls, func in mro_funcs
-                                                if func and func.func_code == caller_code \
-                                                        and tuple(cell_contents(func.func_closure)) == caller_free_vars
+                                                if func and func.__code__ == caller_code \
+                                                        and tuple(cell_contents(func.__closure__)) == caller_free_vars
                                         ))
                 except StopIteration:
                     # we also dont always know the real name that's being invoked if e.g. we are inside
@@ -97,4 +97,4 @@ class more_super3(super3):
 
 class callable_super3(more_super3):
     def __call__(self, *args, **kwargs):
-        return getattr(self, self.bound_caller_func.func_name)(*args, **kwargs)
+        return getattr(self, self.bound_caller_func.__name__)(*args, **kwargs)

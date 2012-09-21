@@ -82,10 +82,10 @@ import random
 
 classes = [J, K, A3, I, H, A, A2, B, C, D, E, F, G]
 random.shuffle(classes)
-print classes
+print(classes)
 
 for cls in classes:
-    print cls, cls().f()
+    print((cls, cls().f()))
 
 def speed():
     class A(object):
@@ -128,7 +128,7 @@ def speed():
 
         e = time.time()
         
-        print (e-s), (e-s)/(N*U)
+        print((e-s), (e-s)/(N*U))
         return (e-s), N*U
 
     py = super_time(pyB)
@@ -136,8 +136,8 @@ def speed():
     myE = super_time(myExplicitB)
     myD = super_time(myDecoratedB)
 
-    print "implicit is", myI[0]/py[0], "times slower than normal super()"
-    print "explicit is", myE[0]/py[0], "times slower than normal super()"
-    print "decorated is", myD[0]/py[0], "times slower than normal super()"
+    print("implicit is", myI[0]/py[0], "times slower than normal super()")
+    print("explicit is", myE[0]/py[0], "times slower than normal super()")
+    print("decorated is", myD[0]/py[0], "times slower than normal super()")
 
 speed()    
