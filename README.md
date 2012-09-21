@@ -7,6 +7,9 @@ Unlike previous implementations (e.g. http://code.activestate.com/recipes/286195
 of the implicit super() pattern this one is syntax compatible with Python 3 if
 you ```from super3 import super3 as super```.
 
+More than super()
+-----------------
+
 Infact, we go one further than Python3's super(). It even works inside a decorator like this
 
 ```
@@ -25,3 +28,9 @@ Python3 Support
 Python3 is also supported but it uses entirely the same code as Python2.
 
 Really it should be taking the shortcut of grabbing the `__cell__` freevar out of `func.__closure__`.
+
+
+Copying
+-------
+
+This library is licensed under the LGPLv3 or later as defined in the COPYING file.
