@@ -1,8 +1,11 @@
-from super3 import more_super3 as super3
-from super3 import callable_super3
-import inspect
 import time
-import sys
+
+import inspect
+import random
+
+from super3 import more_super3 as super3, callable_super3
+
+
 def super_proxy(self, type):
     py_super = super(type, self)
     my_super = super3(caller=inspect.currentframe().f_back)
@@ -78,7 +81,6 @@ class K(G):
     def f(self):
         return callable_super3()()
 
-import random
 
 classes = [J, K, A3, I, H, A, A2, B, C, D, E, F, G]
 random.shuffle(classes)
@@ -127,7 +129,7 @@ def speed():
             b.f()
 
         e = time.time()
-        
+
         print((e-s), (e-s)/(N*U))
         return (e-s), N*U
 
@@ -140,4 +142,4 @@ def speed():
     print("explicit is", myE[0]/py[0], "times slower than normal super()")
     print("decorated is", myD[0]/py[0], "times slower than normal super()")
 
-speed()    
+speed()
